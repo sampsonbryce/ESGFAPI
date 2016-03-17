@@ -4,15 +4,20 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 <html>
 
 <head>
-<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css>"
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
 <title>ESGF Search</title>
 </head>
 
 <body>
 <div class="container">
     <p class="text-center">testing bootstrap and flask</p>
+    <button type="button" id="searchbutton">Click Me!</button>
 </div>
 
 </body>
+<script src="https://code.jquery.com/jquery-2.2.2.js" integrity="sha256-4/zUCqiq0kqxhZIyp4G0Gk+AOtCJsY1TA00k5ClsZYE=" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename="scripts.js") }}"></script>
 </html>
+
+
