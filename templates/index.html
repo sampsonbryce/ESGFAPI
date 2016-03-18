@@ -4,15 +4,30 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 <html>
 
 <head>
-<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
-<title>ESGF Search</title>
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <title>ESGF Search</title>
 </head>
 
 <body>
 <div class="container">
-    <p class="text-center">testing bootstrap and flask</p>
-    <button type="button" id="searchbutton">Click Me!</button>
+    <form class="alert alert-info">
+        Project:<br>
+        <select id="project">
+            <option value="CMIP5">CMIP5</option>
+            <option value="CMIP3">CMIP3</option>
+            <option value="PMIP">PMIP</option>
+            <option value="SMIP">SMIP</option>
+        </select><br>
+        Query:<br>
+        <input id="query" type="text" name="query"><br>
+        Model:<br>
+        <input id="model" type="text" name="model"><br>
+        Experiment:<br>
+        <input id="experiment" type="text" name="experiment"><br><br>
+        <button type="button" id="search-button">Search</button>
+    </form>
 </div>
+<div id="results"></div>
 
 </body>
 <script src="https://code.jquery.com/jquery-2.2.2.js" integrity="sha256-4/zUCqiq0kqxhZIyp4G0Gk+AOtCJsY1TA00k5ClsZYE=" crossorigin="anonymous"></script>
