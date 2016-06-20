@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 # from flask.ext.api import status
 from pyesgf.search import SearchConnection
 import json
@@ -15,8 +15,22 @@ def index():
     return render_template('index.html')
 
 
-# @esgfapp.route('/search', methods=['POST'])
-# def search():
+@esgfapp.route('/search', methods=['POST'])
+def search():
+    conn = SearchConnection(CORE_LINK, distrib=True)
+    constraints = dict(request.json)
+    results_count = constraints['results_count']
+    del constraints['results_count']
+    ctx = conn.new_context(**constraints)
+    results = ctx.search()
+    response = {'constraints': constraints}
+    for index in range(results_count):
+        try:
+            response[index] = results[index].json
+        except IndexError:
+            break
+    return jsonify(response)
+
 if __name__ == '__main__':
-    esgfapp.run(host=HOST, port=5000, debug=1)
     print "running server"
+    esgfapp.run(host=HOST, port=5000, debug=1)

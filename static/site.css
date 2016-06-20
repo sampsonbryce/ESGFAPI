@@ -1,3 +1,5 @@
+body {
+}
 .text-center{
     text-align:center;
 }
@@ -7,4 +9,18 @@
 
 .inline{
     display:inline-block;
+}
+
+.title-word{
+}
+
+#results-subdiv{
+    background-color: #9cdfe5;
+    padding:20px;
+    margin-top:10px;
+    margin-bottom:20px;
+}
+
+.dl-icon{
+    margin-right:10px;
 }

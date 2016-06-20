@@ -5,6 +5,7 @@
 <head>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/picnicss/6.0.0/picnic.min.css">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='site.css') }}">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
     <title>ESGF Search</title>
 </head>
 
@@ -16,7 +17,7 @@
             Search
         </div>
         <div class="four-fifth" style="display:inline-block">
-            <span><input class="search-param" type="text"></span>
+            <span><input id="query-input" type="text"></span>
         </div>
     </div>
 </div>
@@ -24,20 +25,20 @@
 <div class='flex two center' id="filter">
     <div>
         <form>
-            <div class="flex two center">
+            <div class="flex two center search-param">
                 <select name='feature'>
-                    <option value="Project">Project</option>
-                    <option value="Model">Model</option>
-                    <option value="Realm">Realm</option>
-                    <option value="Ensemble">Ensemble</option>
-                    <option value="Time-Frequency">Time Frequency</option>
-                    <option value="Experiment">Experiment</option>
-                    <option value="Experiment-Family">Experiment Family</option>
-                    <option value="From">From Timestamp</option>
-                    <option value="To">To Timestamp</option>
+                    <option value="project">Project</option>
+                    <option value="model">Model</option>
+                    <option value="realm">Realm</option>
+                    <option value="ensemble">Ensemble</option>
+                    <option value="time frequency">Time Frequency</option>
+                    <option value="experiment">Experiment</option>
+                    <option value="experiment-family">Experiment Family</option>
+                    <option value="from-timestamp">From Timestamp</option>
+                    <option value="to-timestamp">To Timestamp</option>
                 </select>
                 <div>
-                    <input class="search-param" type="text">
+                    <input type="text" value="CMIP5">
                 </div>
             </div>
         </form>
@@ -49,17 +50,14 @@
 <div class="flex three center">
     <button type="button" id="search-button" class="button">Search</button>
 </div>
-<div id="results" class=""></div>
-
-</div>
+<div id="results" class="flex two center"></div>
 
 </body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/core.js"
-        integrity="sha256-4/zUCqiq0kqxhZIyp4G0Gk+AOtCJsY1TA00k5ClsZYE="
-        crossorigin="anonymous"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='scripts.js') }}"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/picnicss/6.0.0/plugins.min.css"></script>
+<script src="https://code.jquery.com/jquery-3.0.0.min.js"
+        integrity="sha256-JmvOoLtYsmqlsWxa7mDSLMwa6dZ9rrIdtrrVYRnDRH0=" crossorigin="anonymous"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/nanobar/0.4.2/nanobar.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/picnicss/6.0.0/plugins.min.css"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='scripts.js') }}"></script>
 </html>
 
 
