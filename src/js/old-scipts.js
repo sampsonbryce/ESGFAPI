@@ -1,4 +1,4 @@
-var searchurl = 'http://ec2-52-37-75-79.us-west-2.compute.amazonaws.com:5000/search';
+var searchurl = '127.0.0.1:5000';
 
 var $loading = $('#loading-bar').hide();
 
