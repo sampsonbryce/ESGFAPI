@@ -46,154 +46,184 @@
 
 	'use strict';
 	
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+	String.prototype.capitalize = function () {
+	    return this.charAt(0).toUpperCase() + this.slice(1);
+	};
 	
 	var Container = React.createClass({
 	    displayName: 'Container',
 	    getInitialState: function getInitialState() {
-	        this.state = {
-	            'filter_count': 1
-	        };
-	        return this.state;
+	        return { 'datasets': {} };
 	    },
 	    submit: function submit(event) {
-	        console.log('state', this.state);
-	        //TODO: add catch for empty object
+	        console.log('submit state', this.state);
+	        var filters = this.refs.filter.filters;
+	        filters['query'] = this.refs.query.value;
+	        if (filters['query'] === '') {
+	            console.log('empty query'); //TODO: display message to user
+	            return;
+	        }
+	        filters['results_count'] = 50;
+	        var that = this;
+	        $.ajax({
+	            xhr: function xhr() {
+	                var options = {
+	                    classname: 'my-class',
+	                    id: 'my-id'
+	                };
+	
+	                var nanobar = new Nanobar(options);
+	                var xhr = new window.XMLHttpRequest();
+	                xhr.upload.addEventListener("progress", function (evt) {
+	                    if (evt.lengthComputable) {
+	                        var percentComplete = evt.loaded / evt.total * 100 / 2;
+	                        nanobar.go(percentComplete);
+	                    }
+	                }, false);
+	                xhr.addEventListener("progress", function (evt) {
+	                    if (evt.lengthComputable) {
+	                        var percentComplete = evt.loaded / evt.total * 100 / 2 + 50;
+	                        nanobar.go(percentComplete);
+	                    }
+	                }, false);
+	                return xhr;
+	            },
+	
+	            url: 'http://localhost:5000/search', //TODO: Remove this
+	            data: JSON.stringify(filters),
+	            type: 'POST',
+	            contentType: 'application/json;charset=UTF-8',
+	            success: function success(response) {
+	                console.log('checking state', that.state);
+	                console.log('response', response);
+	                var tempstate = that.state;
+	                tempstate['constraints'] = response['constraints'];
+	                delete response['constraints'];
+	                tempstate['datasets'] = response;
+	                that.setState(tempstate);
+	            },
+	            error: function error(response) {
+	                console.log('fail');
+	            }
+	        });
 	    },
 	    checkEnter: function checkEnter(event) {
 	        if (event.keyCode === 13) {
 	            this.submit(event);
 	        }
 	    },
-	    updateState: function updateState(key, value) {
-	        var state = this.state;
-	        if (!value && Object.keys(state).indexOf(key) !== -1) {
-	            delete state[key];
-	        } else if (value) {
-	            state[key] = value;
-	        }
-	        this.setState(state);
-	    },
-	    incrementFilterCount: function incrementFilterCount() {
-	        var state = this.state;
-	        state.filter_count += 1;
-	        this.setState(state);
-	    },
 	    render: function render() {
+	
+	        console.log('render state', this.state);
 	        return React.createElement(
 	            'div',
 	            { onKeyUp: this.checkEnter },
-	            React.createElement(Search, { onChangeFunc: this.updateState }),
-	            React.createElement(Filter, { ref: 'filter', onKeyUp: this.checkEnter, onChangeFunc: this.updateState, count: this.state.filter_count }),
 	            React.createElement(
-	                'button',
-	                { onClick: this.incrementFilterCount },
-	                '+'
+	                'h3',
+	                { style: {
+	                        'display': "inline-block"
+	                    } },
+	                'Query'
 	            ),
+	            React.createElement('input', { className: 'search-bar', ref: 'query' }),
+	            React.createElement(Filter, { ref: 'filter', onKeyUp: this.checkEnter }),
 	            React.createElement(
 	                'button',
 	                { onClick: this.submit },
 	                'Submit'
-	            )
+	            ),
+	            React.createElement(ResultsContainer, { results: this.state.datasets })
 	        );
-	    }
-	});
-	
-	var Search = React.createClass({
-	    displayName: 'Search',
-	    render: function render() {
-	        var _this = this;
-	
-	        return React.createElement('input', { className: 'search-bar', onChange: function onChange(event) {
-	                return _this.props.onChangeFunc('query', event.target.value);
-	            } });
 	    }
 	});
 	
 	var Filter = React.createClass({
 	    displayName: 'Filter',
-	    handleChange: function handleChange() {
-	        this.props.onChangeFunc(this.refs.dropdown.value, this.refs.input.value);
+	    getInitialState: function getInitialState() {
+	        this.filters = {};
+	        return {
+	            'filters': [],
+	            'possible_filters': ['Select a filter...', 'project', 'model', 'realm', 'ensemble']
+	        }; //TODO: get possible from esgf api
 	    },
-	    checkForDuplicates: function checkForDuplicates(name) {
-	        for (var i = 0; i < this.props.count; i++) {
-	            var n = 'filter' + i;
-	            if (n !== name) {
-	                if (this.refs[name].value === this.refs[n].value) {
-	                    this.refs[n].value = '';
-	                }
-	            }
-	        }
+	    handleChange: function handleChange(key, event) {
+	        this.filters[key] = event.target.value;
+	    },
+	    removePossibleFilter: function removePossibleFilter(event) {
+	        var state = this.state;
+	        delete state.possible_filters[state.possible_filters.indexOf(event.target.value)];
+	        this.state.filters.push(event.target.value);
+	        this.setState(state);
+	        console.log(this.state);
 	    },
 	    render: function render() {
 	        var filters = [];
-	        for (var i = 0; i < this.props.count; i++) {
-	            var _React$createElement;
 	
+	        console.log('in render adding filters', this.state.filters);
+	        for (var i = 0; i < this.state.filters.length; i++) {
+	            console.log('adding filter');
 	            var name = 'filter' + i;
 	            filters.push(React.createElement(
 	                'div',
 	                { key: i },
 	                React.createElement(
-	                    'select',
-	                    (_React$createElement = { ref: name, onChange: this.checkForDuplicates.bind(this, name), className: 'filter-dropdown' }, _defineProperty(_React$createElement, 'ref', 'dropdown'), _defineProperty(_React$createElement, 'onChange', this.handleChange), _React$createElement),
-	                    React.createElement(
-	                        'option',
-	                        { value: 'project' },
-	                        'Project'
-	                    ),
-	                    React.createElement(
-	                        'option',
-	                        { value: 'model' },
-	                        'Model'
-	                    ),
-	                    React.createElement(
-	                        'option',
-	                        { value: 'realm' },
-	                        'Realm'
-	                    ),
-	                    React.createElement(
-	                        'option',
-	                        { value: 'ensemble' },
-	                        'Ensemble'
-	                    ),
-	                    React.createElement(
-	                        'option',
-	                        { value: 'time frequency' },
-	                        'Time Frequency'
-	                    ),
-	                    React.createElement(
-	                        'option',
-	                        { value: 'experiment' },
-	                        'Experiment'
-	                    ),
-	                    React.createElement(
-	                        'option',
-	                        { value: 'experiment-family' },
-	                        'Experiment Family'
-	                    ),
-	                    React.createElement(
-	                        'option',
-	                        { value: 'from-timestamp' },
-	                        'From Timestamp'
-	                    ),
-	                    React.createElement(
-	                        'option',
-	                        { value: 'to-timestamp' },
-	                        'To Timestamp'
-	                    )
+	                    'h3',
+	                    { key: i, style: {
+	                            'display': 'inline-block'
+	                        } },
+	                    this.state.filters[i].capitalize()
 	                ),
-	                React.createElement('input', { className: 'filter-bar', ref: 'input', onChange: this.handleChange })
+	                React.createElement('input', { className: 'filter-bar', key: i, ref: name, onChange: this.handleChange.bind(this, this.state.filters[i]) })
 	            ));
 	        }
+	
 	        return React.createElement(
 	            'div',
 	            null,
-	            filters
+	            filters,
+	            React.createElement(
+	                'select',
+	                { onChange: this.removePossibleFilter, className: 'filter-dropdown', ref: 'dropdown' },
+	                this.state.possible_filters.map(function (value, index) {
+	                    return React.createElement(
+	                        'option',
+	                        { key: index, value: value },
+	                        value
+	                    );
+	                })
+	            )
 	        );
 	    }
 	});
 	
+	var ResultsContainer = React.createClass({
+	    displayName: 'ResultsContainer',
+	    render: function render() {
+	        var _this = this;
+	
+	        console.log('resutls', this.props.results);
+	        return React.createElement(
+	            'ul',
+	            { style: {
+	                    'listStyle': 'none'
+	                } },
+	            Object.keys(this.props.results).map(function (result, i) {
+	                return React.createElement(Result, { key: i, obj: _this.props.results[result] });
+	            })
+	        );
+	    }
+	});
+	
+	var Result = React.createClass({
+	    displayName: 'Result',
+	    render: function render() {
+	        return React.createElement(
+	            'li',
+	            null,
+	            this.props.obj.title
+	        );
+	    }
+	});
 	ReactDOM.render(React.createElement(Container, null), document.getElementById('search-container'));
 
 /***/ }

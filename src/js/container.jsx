@@ -1,98 +1,160 @@
+String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
 var Container = React.createClass({
     getInitialState() {
-        this.state = {
-            'filter_count': 1
-        };
-        return this.state
+        return {'datasets': {}};
     },
     submit(event) {
-        console.log('state', this.state);
-        //TODO: add catch for empty object
+        console.log('submit state', this.state);
+        var filters = this.refs.filter.filters;
+        filters['query'] = this.refs.query.value;
+        if (filters['query'] === '') {
+            console.log('empty query'); //TODO: display message to user
+            return;
+        }
+        filters['results_count'] = 50;
+        var that = this;
+        $.ajax({
+            xhr: function() {
+                var options = {
+                    classname: 'my-class',
+                    id: 'my-id'
+                };
+
+                var nanobar = new Nanobar(options);
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function(evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = ((evt.loaded / evt.total) * 100) / 2;
+                        nanobar.go(percentComplete);
+                    }
+                }, false);
+                xhr.addEventListener("progress", function(evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = (((evt.loaded / evt.total) * 100) / 2) + 50;
+                        nanobar.go(percentComplete);
+                    }
+                }, false);
+                return xhr;
+            },
+
+            url: 'http://localhost:5000/search', //TODO: Remove this
+            data: JSON.stringify(filters),
+            type: 'POST',
+            contentType: 'application/json;charset=UTF-8',
+            success: function(response) {
+                console.log('checking state', that.state);
+                console.log('response', response);
+                var tempstate = that.state;
+                tempstate['constraints'] = response['constraints'];
+                delete response['constraints'];
+                tempstate['datasets'] = response;
+                that.setState(tempstate);
+            },
+            error: function(response) {
+                console.log('fail');
+            }
+        });
     },
     checkEnter(event) {
         if (event.keyCode === 13) {
             this.submit(event);
         }
     },
-    updateState(key, value) {
-        var state = this.state;
-        if (!value && Object.keys(state).indexOf(key) !== -1) {
-            delete state[key];
-        } else if (value){
-            state[key] = value;
-        }
-        this.setState(state);
-    },
-    incrementFilterCount(){
-      var state = this.state;
-      state.filter_count += 1;
-      this.setState(state);
-    },
     render() {
+
+        console.log('render state', this.state);
         return (
             <div onKeyUp={this.checkEnter}>
-                <Search onChangeFunc={this.updateState}/>
-                <Filter ref='filter' onKeyUp={this.checkEnter} onChangeFunc={this.updateState} count={this.state.filter_count}></Filter>
-                <button onClick={this.incrementFilterCount}>+</button>
+                <h3 style={{
+                    'display': "inline-block"
+                }}>Query</h3>
+                <input className="search-bar" ref='query'></input>
+                <Filter ref='filter' onKeyUp={this.checkEnter}></Filter>
                 <button onClick={this.submit}>Submit</button>
+                <ResultsContainer results={this.state.datasets}/>
             </div>
-        );
-    }
-});
-
-var Search = React.createClass({
-    render() {
-        return (
-            <input className="search-bar" onChange={(event) => (this.props.onChangeFunc('query', event.target.value))}></input>
         );
     }
 });
 
 var Filter = React.createClass({
-    handleChange() {
-        this.props.onChangeFunc(this.refs.dropdown.value, this.refs.input.value);
+    getInitialState() {
+        this.filters = {};
+        return {
+            'filters': [],
+            'possible_filters': ['Select a filter...', 'project', 'model', 'realm', 'ensemble']
+        }; //TODO: get possible from esgf api
+    },
+    handleChange(key, event) {
+        this.filters[key] = event.target.value;
     },
 
-    checkForDuplicates(name){
-      for (var i = 0; i < this.props.count; i++) {
-        var n = 'filter'+i;
-        if (n !== name){
-          if (this.refs[name].value === this.refs[n].value){
-            this.refs[n].value = '';
-          }
-
-        }
-      }
+    removePossibleFilter(event) {
+        let state = this.state;
+        delete state.possible_filters[state.possible_filters.indexOf(event.target.value)];
+        this.state.filters.push(event.target.value);
+        this.setState(state);
+        console.log(this.state);
     },
 
     render() {
-        var filters = [];
-        for (var i = 0; i < this.props.count; i++) {
-            var name = 'filter' + i;
+        var filters = []
+
+        console.log('in render adding filters', this.state.filters);
+        for (var i = 0; i < this.state.filters.length; i++) {
+            console.log('adding filter');
+            let name = 'filter' + i;
             filters.push(
-                <div key={i} >
-                    <select ref={name} onChange={this.checkForDuplicates.bind(this, name)} className="filter-dropdown" ref='dropdown' onChange={this.handleChange}>
-                        <option value="project">Project</option>
-                        <option value="model">Model</option>
-                        <option value="realm">Realm</option>
-                        <option value="ensemble">Ensemble</option>
-                        <option value="time frequency">Time Frequency</option>
-                        <option value="experiment">Experiment</option>
-                        <option value="experiment-family">Experiment Family</option>
-                        <option value="from-timestamp">From Timestamp</option>
-                        <option value="to-timestamp">To Timestamp</option>
-                    </select>
-                    <input className="filter-bar" ref='input' onChange={this.handleChange}></input>
+                <div key={i}>
+                    <h3 key={i} style={{
+                        'display': 'inline-block'
+                    }}>{this.state.filters[i].capitalize()}</h3>
+                    <input className="filter-bar" key={i} ref={name} onChange={this.handleChange.bind(this, this.state.filters[i])}></input>
                 </div>
             );
         }
+
         return (
             <div>
                 {filters}
+                <select onChange={this.removePossibleFilter} className="filter-dropdown" ref='dropdown'>
+                    {this.state.possible_filters.map((value, index) => {
+                        return (
+                            <option key={index} value={value}>{value}</option>
+                        )
+                    })}
+                </select>
             </div>
         )
     }
 });
 
+var ResultsContainer = React.createClass({
+    render() {
+        console.log('resutls', this.props.results);
+        return (
+            <ul style={{
+                'listStyle': 'none'
+            }}>
+                {Object.keys(this.props.results).map((result, i) => {
+                    return (
+                        <Result key={i} obj={this.props.results[result]}></Result>
+                    )
+                })}
+            </ul>
+        )
+    }
+})
+
+var Result = React.createClass({
+    render() {
+        return (
+            <li>{this.props.obj.title}</li>
+        )
+    }
+})
 ReactDOM.render(
     <Container/>, document.getElementById('search-container'));
