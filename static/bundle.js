@@ -46,10 +46,19 @@
 
 	'use strict';
 	
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+	
 	var Container = React.createClass({
 	    displayName: 'Container',
+	    getInitialState: function getInitialState() {
+	        this.state = {
+	            'filter_count': 1
+	        };
+	        return this.state;
+	    },
 	    submit: function submit(event) {
 	        console.log('state', this.state);
+	        //TODO: add catch for empty object
 	    },
 	    checkEnter: function checkEnter(event) {
 	        if (event.keyCode === 13) {
@@ -57,19 +66,30 @@
 	        }
 	    },
 	    updateState: function updateState(key, value) {
-	        console.log('updateing state', key, value);
-	        var state = this.state ? this.state : {};
-	        state[key] = value;
+	        var state = this.state;
+	        if (!value && Object.keys(state).indexOf(key) !== -1) {
+	            delete state[key];
+	        } else if (value) {
+	            state[key] = value;
+	        }
+	        this.setState(state);
+	    },
+	    incrementFilterCount: function incrementFilterCount() {
+	        var state = this.state;
+	        state.filter_count += 1;
 	        this.setState(state);
 	    },
 	    render: function render() {
-	        var test = this.updateState.bind(this);
-	        console.log(test);
 	        return React.createElement(
 	            'div',
-	            { onKeyUp: this.checkEnter.bind(this) },
-	            React.createElement(Search, { onChangeFunc: this.updateState.bind(this) }),
-	            React.createElement(Filter, { onKeyUp: this.checkEnter, onChangeFunc: this.updateState.bind(this) }),
+	            { onKeyUp: this.checkEnter },
+	            React.createElement(Search, { onChangeFunc: this.updateState }),
+	            React.createElement(Filter, { ref: 'filter', onKeyUp: this.checkEnter, onChangeFunc: this.updateState, count: this.state.filter_count }),
+	            React.createElement(
+	                'button',
+	                { onClick: this.incrementFilterCount },
+	                '+'
+	            ),
 	            React.createElement(
 	                'button',
 	                { onClick: this.submit },
@@ -84,8 +104,6 @@
 	    render: function render() {
 	        var _this = this;
 	
-	        console.log('props', this.props);
-	        console.log(this.props.onChangeFunc);
 	        return React.createElement('input', { className: 'search-bar', onChange: function onChange(event) {
 	                return _this.props.onChangeFunc('query', event.target.value);
 	            } });
@@ -95,63 +113,83 @@
 	var Filter = React.createClass({
 	    displayName: 'Filter',
 	    handleChange: function handleChange() {
-	        console.log('handleChange');
 	        this.props.onChangeFunc(this.refs.dropdown.value, this.refs.input.value);
 	    },
+	    checkForDuplicates: function checkForDuplicates(name) {
+	        for (var i = 0; i < this.props.count; i++) {
+	            var n = 'filter' + i;
+	            if (n !== name) {
+	                if (this.refs[name].value === this.refs[n].value) {
+	                    this.refs[n].value = '';
+	                }
+	            }
+	        }
+	    },
 	    render: function render() {
+	        var filters = [];
+	        for (var i = 0; i < this.props.count; i++) {
+	            var _React$createElement;
+	
+	            var name = 'filter' + i;
+	            filters.push(React.createElement(
+	                'div',
+	                { key: i },
+	                React.createElement(
+	                    'select',
+	                    (_React$createElement = { ref: name, onChange: this.checkForDuplicates.bind(this, name), className: 'filter-dropdown' }, _defineProperty(_React$createElement, 'ref', 'dropdown'), _defineProperty(_React$createElement, 'onChange', this.handleChange), _React$createElement),
+	                    React.createElement(
+	                        'option',
+	                        { value: 'project' },
+	                        'Project'
+	                    ),
+	                    React.createElement(
+	                        'option',
+	                        { value: 'model' },
+	                        'Model'
+	                    ),
+	                    React.createElement(
+	                        'option',
+	                        { value: 'realm' },
+	                        'Realm'
+	                    ),
+	                    React.createElement(
+	                        'option',
+	                        { value: 'ensemble' },
+	                        'Ensemble'
+	                    ),
+	                    React.createElement(
+	                        'option',
+	                        { value: 'time frequency' },
+	                        'Time Frequency'
+	                    ),
+	                    React.createElement(
+	                        'option',
+	                        { value: 'experiment' },
+	                        'Experiment'
+	                    ),
+	                    React.createElement(
+	                        'option',
+	                        { value: 'experiment-family' },
+	                        'Experiment Family'
+	                    ),
+	                    React.createElement(
+	                        'option',
+	                        { value: 'from-timestamp' },
+	                        'From Timestamp'
+	                    ),
+	                    React.createElement(
+	                        'option',
+	                        { value: 'to-timestamp' },
+	                        'To Timestamp'
+	                    )
+	                ),
+	                React.createElement('input', { className: 'filter-bar', ref: 'input', onChange: this.handleChange })
+	            ));
+	        }
 	        return React.createElement(
 	            'div',
 	            null,
-	            React.createElement(
-	                'select',
-	                { className: 'filter-dropdown', ref: 'dropdown', onChange: this.handleChange },
-	                React.createElement(
-	                    'option',
-	                    { value: 'project' },
-	                    'Project'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'model' },
-	                    'Model'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'realm' },
-	                    'Realm'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'ensemble' },
-	                    'Ensemble'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'time frequency' },
-	                    'Time Frequency'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'experiment' },
-	                    'Experiment'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'experiment-family' },
-	                    'Experiment Family'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'from-timestamp' },
-	                    'From Timestamp'
-	                ),
-	                React.createElement(
-	                    'option',
-	                    { value: 'to-timestamp' },
-	                    'To Timestamp'
-	                )
-	            ),
-	            React.createElement('input', { className: 'filter-bar', ref: 'input', onChange: this.handleChange })
+	            filters
 	        );
 	    }
 	});
